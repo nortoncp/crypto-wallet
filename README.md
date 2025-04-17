@@ -11,7 +11,7 @@ Aplicação web desenvolvida com **Flask** para gerenciamento de uma carteira de
 - 🧮 **Cálculo automático de preço atual, variação e lucro** (dados da API da Binance).
 - 📊 **Gráficos de evolução da carteira** por data e por ativo.
 - 🌚 **Modo escuro (dark mode)**.
-- 📅 Página com **calendário econômico dos EUA** (via FED).
+- 📅 Página com **calendário econômico dos EUA*.
 - 💥 Monitoramento de **grandes movimentações de mercado**.
 - 🧠 Página de **análise de mercado futuro** com:
   - Sinais de compra/venda
