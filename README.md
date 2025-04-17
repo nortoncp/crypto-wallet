@@ -1,4 +1,4 @@
-# 💰 CryptoWallet - Gerenciador de Carteira de Criptomoedas
+# 💰 Crypto Wallet
 
 Aplicação web desenvolvida com **Flask** para gerenciamento de uma carteira de criptoativos em tempo real. Integra dados da **Binance**, gráficos dinâmicos, análises técnicas, alertas via Telegram e muito mais.
 
