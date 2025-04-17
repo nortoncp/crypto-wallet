@@ -42,16 +42,20 @@ git clone git@github.com:seu-usuario/seu-repo.git
 cd seu-repo
 
 
-Crie e ative um ambiente virtual:
+2. Crie e ative um ambiente virtual:
 python3 -m venv venv
 source venv/bin/activate
 
+3. Instale as Dependências
 pip install -r requirements.txt
 Crie um arquivo .env com base no .env.example:
 
-bash
-Copiar
-Editar
-
+4. Crie um arquivo .env com base no .env.example:
 cp .env.example .env
+
+5. Rode o App
+flask run
+
+
+
 
