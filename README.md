@@ -34,10 +34,9 @@ Aplicação web desenvolvida com **Flask** para gerenciamento de uma carteira de
 ---
 
 ## 📦 Instalação
+```bash
 
 1. Clone o repositório:
-
-```bash
 git clone git@github.com:seu-usuario/seu-repo.git
 cd seu-repo
 
