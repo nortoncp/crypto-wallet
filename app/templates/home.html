@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2 class="section-title">Dashboard</h2>
+
+    <div class="kpi-container">
+  <div class="kpi-card">
+    <p class="kpi-label">Total Investido</p>
+    <p class="kpi-value">$ {{ total_investido }}</p>
+  </div>
+  <div class="kpi-card">
+    <p class="kpi-label">Valor Carteira</p>
+    <p class="kpi-value">$ {{ valor_atual_total }}</p>
+  </div>
+  <div class="kpi-card">
+    <p class="kpi-label">
+      {% if lucro_prejuizo_total >= 0 %}Lucro{% else %}Prejuízo{% endif %}
+    </p>
+    <p class="kpi-value" style="color: {{ 'green' if lucro_prejuizo_total >= 0 else 'red' }}">
+      $ {{ lucro_prejuizo_total }}
+    </p>
+  </div>
+        <div class="kpi-card">
+        <p class="kpi-label">Saldo USDT SPOT</p>
+        <p class="kpi-value" style="color: {{ 'green' if saldo_spot_usdt >= 1 else 'yellow' }}">
+            $ {{ saldo_spot_usdt | round(2) }}</p>
+        </div>
+        <div class="kpi-card">
+        <p class="kpi-label">Saldo USDT FUTURO</p>
+        <p class="kpi-value" style="color: {{ 'green' if saldo_futuros_usdt >= 1 else 'yellow' }}">
+            $ {{ saldo_futuros_usdt | round(2) }}</p>
+        </div>
+</div>
+
+
+
+    <div class="noticias-card">
+        <h3 class="section-subtitle">Notícias Bitcoin</h3>
+        <marquee behavior="scroll" direction="left" class="news-marquee">
+            {% for noticia in noticias %}
+                <a href="{{ noticia.url }}" target="_blank">{{ noticia.title }}</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+            {% endfor %}
+        </marquee>
+    </div>
+
+    <h3 class="mt-4 text-center">🔥 Hots | 🚀 Gainers | 📉 Losers</h3>
+<table class="table table-sm table-bordered text-center">
+    <thead class="table-dark">
+        <tr>
+            <th colspan="3" class="text-center">🔥 Hots</th>
+            <th colspan="3" class="text-center">🚀 Gainers</th>
+            <th colspan="3" class="text-center">📉 Losers</th>
+        </tr>
+        <tr>
+            <!-- Hots -->
+            <th>Ativo</th>
+            <th>Preço</th>
+            <th>Variação</th>
+            <!-- Gainers -->
+            <th>Ativo</th>
+            <th>Preço</th>
+            <th>Variação</th>
+            <!-- Losers -->
+            <th>Ativo</th>
+            <th>Preço</th>
+            <th>Variação</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for i in range(top_movers['gainers']|length) %}
+        <tr>
+            <!-- Hots -->
+            <td><strong>{{ top_movers['hots'][i].symbol }}</strong></td>
+            <td>${{ top_movers['hots'][i].lastPrice }}</td>
+            <td style="color: {% if top_movers['hots'][i].priceChangePercent|float > 0 %}green{% else %}red{% endif %};">
+                {{ "%.2f"|format(top_movers['hots'][i].priceChangePercent|float) }}%
+            </td>
+
+            <!-- Gainers -->
+            <td><strong>{{ top_movers['gainers'][i].symbol }}</strong></td>
+            <td>${{ top_movers['gainers'][i].lastPrice }}</td>
+            <td style="color:green">
+                {{ "%.2f"|format(top_movers['gainers'][i].priceChangePercent|float) }}%
+            </td>
+
+            <!-- Losers -->
+            <td><strong>{{ top_movers['losers'][i].symbol }}</strong></td>
+            <td>${{ top_movers['losers'][i].lastPrice }}</td>
+            <td style="color:red">
+                {{ "%.2f"|format(top_movers['losers'][i].priceChangePercent|float) }}%
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<script>
+    // Recarrega a página a cada 60 segundos
+    setTimeout(function () {
+        location.reload();
+    }, 60000);
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3 class="mt-4 text-center">🗓️ Próximos Eventos Econômicos (EUA) Esta em teste mostrando Sweden</h3>
+
+<table class="table table-sm table-bordered text-center mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Data</th>
+            <th>Evento</th>
+            <th>Atual</th>
+            <th>Esperado</th>
+            <th>Anterior</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for evento in eventos_economicos %}
+        <tr>
+            <td>{{ evento.data }}</td>
+            <td>{{ evento.evento }}</td>
+            <td>{{ evento.atual }}</td>
+            <td>{{ evento.esperado }}</td>
+            <td>{{ evento.anterior }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<script>
+    // Recarrega a página a cada 30 segundos
+    setTimeout(function () {
+        location.reload();
+    }, 30000);
+</script>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Mercado Futuro - Oportunidade de Trade baseado em Topos, Fundos, Fibo e RSI do gráfico Horário</h2>
+
+<div class="kpi-container">
+  <div class="kpi-card">
+    <div class="kpi-label">Última Análise</div>
+    <div class="kpi-value">{{ analise['tipo'] | capitalize }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Entrada</div>
+    <div class="kpi-value">${{ analise['entrada'] }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Stop Loss</div>
+    <div class="kpi-value">${{ analise['stop_loss'] }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Take Profit</div>
+    <div class="kpi-value">${{ analise['take_profit'] }}</div>
+  </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Saldo USDT</div>
+        <div class="kpi-value" style="color: {{ 'green' if saldo_futuros_usdt >= 1 else 'yellow' }}">
+            $ {{ saldo_futuros_usdt | round(2) }}</div>
+    </div>
+
+</div>
+
+<div class="card">
+  <h3>Posições Abertas na Binance (Futuros)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Ativo</th>
+        <th>Posição</th>
+        <th>Quantidade</th>
+        <th>Preço de Entrada</th>
+        <th>Preço de Marca</th>
+        <th>PNL Não Realizado</th>
+        <th>Risco (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pos in posicoes %}
+        {% if pos['positionAmt']|float != 0 %}
+        <tr>
+          <td>{{ pos['symbol'] }}</td>
+          <td>{{ 'Long' if pos['positionAmt']|float > 0 else 'Short' }}</td>
+          <td>{{ pos['positionAmt'] }}</td>
+          <td>${{ pos['entryPrice'] }}</td>
+          <td>${{ pos['markPrice'] }}</td>
+          <td style="color: {{ 'green' if pos['unRealizedProfit']|float >= 0 else 'red' }}">
+            ${{ pos['unRealizedProfit']|float|round(2) }}
+          </td>
+          <td>
+            {% if pos['initialMargin'] is defined and pos['initialMargin']|float != 0 %}
+              {{ (pos['leverage']|float * pos['unRealizedProfit']|float / pos['initialMargin']|float * 100)|round(2) }}%
+            {% else %}
+              N/A
+            {% endif %}
+          </td>
+
+        </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Histórico de Transações Futuros</h2>
+<table class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Data</th>
+            <th>Ativo</th>
+            <th>Posição</th>
+            <th>$ PnL</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set total_pnl = namespace(valor=0.0) %}
+        {% for transacao in historico|sort(attribute='time', reverse=True) %}
+            {% set pnl = transacao.income %}
+            {% set pnl_float = pnl if pnl is number else pnl | float %}
+            {% set total_pnl.valor = total_pnl.valor + pnl_float %}
+
+            <tr>
+                <td>{{ transacao.time | datetimeformat }}</td>
+                <td>{{ transacao.symbol }}</td>
+                <td>
+                    {% if pnl_float > 0 %}
+                        Long
+                    {% elif pnl_float < 0 %}
+                        Short
+                    {% else %}
+                        Neutral
+                    {% endif %}
+                </td>
+                <td style="color: {% if pnl_float > 0 %}green{% elif pnl_float < 0 %}red{% else %}black{% endif %};">
+                    $ {{ pnl_float | round(2) }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="3">Lucro Total</th>
+            <th style="color: {% if total_pnl.valor > 0 %}green{% elif total_pnl.valor < 0 %}red{% else %}black{% endif %};">
+                $ {{ total_pnl.valor | round(2) }}
+            </th>
+        </tr>
+    </tfoot>
+</table>
+
+
+
+
+<script>
+    // Recarrega a página a cada 30 segundos
+    setTimeout(function () {
+        location.reload();
+    }, 30000);
+</script>
+
+{% endblock %}

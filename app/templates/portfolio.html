@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2 class="form-title">Adicionar Novo Ativo</h2>
+    <form method="POST" class="crypto-form">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            <label for="data_compra" class="form-label">{{ form.data_compra.label.text }}</label>
+            {{ form.data_compra(class="form-input", id="data_compra") }}
+        </div>
+
+        <div class="form-group">
+            <label for="symbol" class="form-label">{{ form.symbol.label.text }}</label>
+            {{ form.symbol(class="form-input", id="symbol") }}
+        </div>
+
+        <div class="form-group">
+            <label for="quantidade" class="form-label">{{ form.quantidade.label.text }}</label>
+            {{ form.quantidade(class="form-input", id="quantidade") }}
+        </div>
+
+        <div class="form-group">
+            <label for="valor_pago" class="form-label">{{ form.valor_pago.label.text }}</label>
+            {{ form.valor_pago(class="form-input", id="valor_pago") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.submit(class="form-button") }}
+        </div>
+    </form>
+</div>
+{% endblock %}

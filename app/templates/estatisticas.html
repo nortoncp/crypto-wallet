@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Estatísticas</h2>
+<canvas id="graficoCarteira" width="300" height="150"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/estatisticas/dados')
+  .then(response => response.json())
+  .then(dados => {
+    const labels = dados.map(item => item[0]);
+    const valores = dados.map(item => item[1]);
+
+    const ctx = document.getElementById('graficoCarteira').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Valor investido por data',
+          data: valores,
+          borderColor: 'rgb(75, 192, 192)',
+          fill: false
+        }]
+      }
+    });
+  });
+</script>
+
+
+{% endblock %}

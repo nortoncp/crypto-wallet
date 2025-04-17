@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto Wallet</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+
+<body>
+    <nav class="navbar">
+        <div class="logo-title">
+            <img src="/static/bitcoin-logo.svg" alt="Bitcoin Logo">
+            <span class="title">Crypto Wallet</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/portfolio/novo">Adicionar Ativo</a>
+            <a href="/mercado-spot">Mercado SPOT</a>
+            <a href="/mercado-futuro">Mercado Futuro</a>
+            <a href="/calendario-economico">Calendario Economico</a>
+            <a href="/estatisticas">Estatísticas</a>
+            <a href="/logout">Sair</a>
+        </div>
+
+
+    </nav>
+    <hr>
+
+    <div style="text-align: right;">
+    <button id="toggle-dark" class="btn btn-secondary">Dark Mode</button>
+    </div>
+
+    {% block content %}{% endblock %}
+
+<script>
+  document.getElementById('toggle-dark').addEventListener('click', function () {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('modoEscuro', document.body.classList.contains('dark-mode'));
+  });
+
+  // manter o tema após recarregar
+  window.onload = function () {
+    if (localStorage.getItem('modoEscuro') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+  }
+</script>
+
+</body>
+</html>

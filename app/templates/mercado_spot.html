@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="dashboard-container">
+    <h2 class="section-title">Carteira SPOT</h2>
+
+    <div class="kpi-container">
+  <div class="kpi-card">
+    <p class="kpi-label">Total Investido</p>
+    <p class="kpi-value">$ {{ total_investido }}</p>
+  </div>
+  <div class="kpi-card">
+    <p class="kpi-label">Valor Atual da Carteira</p>
+    <p class="kpi-value">$ {{ valor_atual_total }}</p>
+  </div>
+  <div class="kpi-card">
+    <p class="kpi-label">
+      {% if lucro_prejuizo_total >= 0 %}Lucro{% else %}Prejuízo{% endif %}
+    </p>
+    <p class="kpi-value" style="color: {{ 'green' if lucro_prejuizo_total >= 0 else 'red' }}">
+      $ {{ lucro_prejuizo_total }}
+    </p>
+  </div>
+        <div class="kpi-card">
+        <p class="kpi-label">Saldo USDT</p>
+        <p class="kpi-value" style="color: {{ 'green' if saldo_spot_usdt >= 1 else 'yellow' }}">
+            $ {{ saldo_spot_usdt | round(2) }}</p>
+        </div>
+</div>
+
+
+    <div class="ativos-section">
+        <h3 class="section-subtitle">Seus Ativos</h3>
+        <div class="table-wrapper">
+            <table class="ativo-table">
+                <thead>
+                    <tr>
+                        <th>Cripto</th>
+                        <th>Data da Compra</th>
+                        <th>Quantidade</th>
+                        <th>Valor Pago</th>
+                        <th>Preço Atual</th>
+                        <th>Variação</th>
+                        <th>Lucro/Prejuízo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ativo in carteira %}
+                    <tr>
+                        <td>{{ ativo.symbol }}</td>
+                        <td>{{ ativo.data_compra.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ ativo.quantidade }}</td>
+                        <td>$ {{ ativo.valor_pago }}</td>
+                        <td>$ {{ ativo.preco_atual }}</td>
+                        <td style="color: {{ 'green' if ativo.variacao >= 0 else 'red' }}">{{ ativo.variacao }}%</td>
+                        <td style="color: {{ 'green' if ativo.lucro_prejuizo >= 0 else 'red' }}">
+                            $ {{ ativo.lucro_prejuizo }}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('portfolio.excluir_ativo', ativo_id=ativo.id) }}" method="POST" class="action-form">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este ativo?');">
+                                    Excluir
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Recarrega a página a cada 30 segundos
+    setTimeout(function () {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}
