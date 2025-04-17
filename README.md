@@ -48,9 +48,9 @@ source venv/bin/activate
 
 3. Instale as Dependências
 pip install -r requirements.txt
-Crie um arquivo .env com base no .env.example:
 
-4. Crie um arquivo .env com base no .env.example:
+4. Vari[aveis de ambiente
+Crie um arquivo .env com base no .env.example:
 cp .env.example .env
 
 5. Rode o App
