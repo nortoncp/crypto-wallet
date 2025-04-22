@@ -1,12 +1,16 @@
 import requests
 import numpy as np
 import pandas as pd
+from fontTools.misc.cython import returns
 from ta.momentum import RSIIndicator
 from app.services.binance_api import get_klines
+from app.services.binance_trade import existe_ordem_aberta
 from app.services.telegram_alert import enviar_alerta_telegram
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+from app.services.binance_trade import *
+
 
 
 # Carregar variáveis de ambiente do arquivo .env
@@ -44,12 +48,16 @@ def calcular_rsi(close_prices):
     rsi = RSIIndicator(pd.Series(close_prices), window=14).rsi()
     return rsi
 
-def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='1h', limite=100):
+def calcular_volatilidade_media(closes):
+    variacoes = [abs(closes[i] - closes[i - 1]) / closes[i - 1] * 100 for i in range(1, len(closes))]
+    return sum(variacoes) / len(variacoes)
+
+
+def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='5m', limite=100):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] ⏱️ Executando análise técnica para {simbolo} ({intervalo})")
+
     klines = get_klines(simbolo, intervalo, limite)
     closes = [float(kline[4]) for kline in klines]
-    highs = [float(kline[2]) for kline in klines]
-    lows = [float(kline[3]) for kline in klines]
 
     topos, fundos = identificar_topos_fundos(closes)
     sinais = []
@@ -58,47 +66,59 @@ def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='1h', limite=100):
         print("⚠️ Nenhum topo ou fundo identificado.")
         return []
 
+    volatilidade = calcular_volatilidade_media(closes)
+    print(f"📊 Volatilidade média: {volatilidade:.2f}%")
+
     topo_recente = max(topos, key=lambda x: x[0])[1]
     fundo_recente = max(fundos, key=lambda x: x[0])[1]
-
     fib = calcular_fibonacci(fundo_recente, topo_recente)
     rsi = calcular_rsi(closes)
     rsi_atual = rsi.iloc[-1]
-
     preco_atual = closes[-1]
-    stop_loss = round(preco_atual * 0.99, 2)  # 1% abaixo
-    take_profit = round(preco_atual * 1.02, 2)  # 2% acima
 
-    if rsi_atual < 30 and preco_atual <= fib["0.618"]:
-        print(f"📈 Sinal de COMPRA detectado: preço={preco_atual}, RSI={rsi_atual}, Fib=0.618")
+    stop_percent = (volatilidade * 2) / 100
+    take_percent = (volatilidade * 3) / 100
+
+    stop_loss = round(preco_atual * (1 - stop_percent), 2)
+    take_profit = round(preco_atual * (1 + take_percent), 2)
+
+    if rsi_atual < 25 and preco_atual <= fib["0.618"]:
+        print(f"📈 Sinal de COMPRA detectado: preço={preco_atual}, RSI={rsi_atual:.2f}, Fib=0.618")
         sinais.append({
             'tipo': 'COMPRA',
             'entrada': preco_atual,
             'stop_loss': stop_loss,
             'take_profit': take_profit,
             'rsi': round(rsi_atual, 2),
-            'nivel_fibonacci': '0.618'
+            'nivel_fibonacci': '0.618',
+            'data': datetime.now().strftime('%d/%m/%Y %H:%M')
         })
-
-        # Enviar alerta no Telegram
         mensagem = f"🚀 **Sinal de COMPRA**\n\nEntrada: ${preco_atual}\nStop Loss: ${stop_loss}\nTake Profit: ${take_profit}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.618"
         enviar_alerta_telegram(token, chat_id, mensagem)
 
+        # Enviar ordem para Binance
+        enviar_ordem_binance(simbolo, 'COMPRA', preco_atual, stop_loss, take_profit)
 
-    elif rsi_atual > 70 and preco_atual >= fib["0.382"]:
-        print(f"📉 Sinal de VENDA detectado: preço={preco_atual}, RSI={rsi_atual}, Fib=0.382")
+
+    elif rsi_atual > 75 and preco_atual >= fib["0.382"]:
+        stop_loss_venda = round(preco_atual * (1 + stop_percent), 2)
+        take_profit_venda = round(preco_atual * (1 - take_percent), 2)
+
+        print(f"📉 Sinal de VENDA detectado: preço={preco_atual}, RSI={rsi_atual:.2f}, Fib=0.382")
         sinais.append({
             'tipo': 'VENDA',
             'entrada': preco_atual,
-            'stop_loss': round(preco_atual * 1.01, 2),
-            'take_profit': round(preco_atual * 0.98, 2),
+            'stop_loss': stop_loss_venda,
+            'take_profit': take_profit_venda,
             'rsi': round(rsi_atual, 2),
-            'nivel_fibonacci': '0.382'
+            'nivel_fibonacci': '0.382',
+            'data': datetime.now().strftime('%d/%m/%Y %H:%M')
         })
-
-        # Enviar alerta no Telegram
-        mensagem = f"⚠️ **Sinal de VENDA**\n\nEntrada: ${preco_atual}\nStop Loss: ${round(preco_atual * 1.01, 2)}\nTake Profit: ${round(preco_atual * 0.98, 2)}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.382"
+        mensagem = f"⚠️ **Sinal de VENDA**\n\nEntrada: ${preco_atual}\nStop Loss: ${stop_loss_venda}\nTake Profit: ${take_profit_venda}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.382"
         enviar_alerta_telegram(token, chat_id, mensagem)
+
+        # Enviar ordem para Binance
+        enviar_ordem_binance(simbolo, 'VENDA', preco_atual, stop_loss_venda, take_profit_venda)
 
 
     return sinais

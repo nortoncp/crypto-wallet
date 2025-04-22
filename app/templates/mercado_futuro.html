@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Mercado Futuro - Oportunidade de Trade baseado em Topos, Fundos, Fibo e RSI do gráfico Horário</h2>
+<h2>Mercado Futuro - Oportunidade de Trade baseado em Topos, Fundos, Fibo e RSI do gráfico de 5 Minutos</h2>
 
 <div class="kpi-container">
   <div class="kpi-card">
@@ -118,10 +118,10 @@
 
 
 <script>
-    // Recarrega a página a cada 30 segundos
+    // Recarrega a página a cada 300 segundos
     setTimeout(function () {
         location.reload();
-    }, 30000);
+    }, 300000);
 </script>
 
 {% endblock %}

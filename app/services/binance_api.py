@@ -21,7 +21,7 @@ def get_price(symbol):
     data = response.json()
     return float(data['price'])
 
-def get_klines(symbol="BTCUSDT", interval="1h", limit=100):
+def get_klines(symbol="BTCUSDT", interval="5m", limit=100):
     url = f"{FUTURES_BASE_URL}/fapi/v1/klines"
     params = {
         "symbol": symbol,
