@@ -32,9 +32,6 @@ def existe_ordem_aberta(symbol):
 
 ###Envia ordem para a Binance
 def enviar_ordem_binance(symbol, tipo_ordem, preco_entrada, stop_loss, take_profit):
-    if existe_ordem_aberta(symbol):
-        print("🚫 Ordem já aberta, aguardando encerramento.")
-        return
 
     configurar_mercado_futuro(symbol)
 

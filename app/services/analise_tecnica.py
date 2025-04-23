@@ -1,5 +1,6 @@
 import requests
 import numpy as np
+from scipy.signal import argrelextrema
 import pandas as pd
 from fontTools.misc.cython import returns
 from ta.momentum import RSIIndicator
@@ -52,8 +53,40 @@ def calcular_volatilidade_media(closes):
     variacoes = [abs(closes[i] - closes[i - 1]) / closes[i - 1] * 100 for i in range(1, len(closes))]
     return sum(variacoes) / len(variacoes)
 
+def detectar_tendencia(df):
+    df['MA50'] = df['close'].rolling(window=50).mean()
+    df['MA200'] = df['close'].rolling(window=200).mean()
 
-def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='5m', limite=100):
+    if df['MA50'].iloc[-1] > df['MA200'].iloc[-1]:
+        return 'ALTA'
+    elif df['MA50'].iloc[-1] < df['MA200'].iloc[-1]:
+        return 'BAIXA'
+    else:
+        return 'LATERAL'
+
+
+def identificar_lta_ltb(df):
+    df['min'] = df['low'][argrelextrema(df['low'].values, np.less_equal, order=5)[0]]
+    df['max'] = df['high'][argrelextrema(df['high'].values, np.greater_equal, order=5)[0]]
+
+    ultimos_fundos = df.dropna(subset=['min']).tail(2)
+    ultimos_topos = df.dropna(subset=['max']).tail(2)
+
+    lta = None
+    ltb = None
+
+    if len(ultimos_fundos) == 2:
+        lta = (ultimos_fundos.index[0], ultimos_fundos['min'].iloc[0]), \
+            (ultimos_fundos.index[1], ultimos_fundos['min'].iloc[1])
+
+    if len(ultimos_topos) == 2:
+        ltb = (ultimos_topos.index[0], ultimos_topos['max'].iloc[0]), \
+            (ultimos_topos.index[1], ultimos_topos['max'].iloc[1])
+
+    return lta, ltb
+
+
+def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='1h', limite=100):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] ⏱️ Executando análise técnica para {simbolo} ({intervalo})")
 
     klines = get_klines(simbolo, intervalo, limite)
@@ -76,13 +109,33 @@ def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='5m', limite=100):
     rsi_atual = rsi.iloc[-1]
     preco_atual = closes[-1]
 
+    # 🧠 Detectando tendência com MME curta e longa
+    df = pd.DataFrame({'close': closes})
+    df['ema20'] = df['close'].ewm(span=20).mean()
+    df['ema50'] = df['close'].ewm(span=50).mean()
+
+    tendencia = 'ALTA' if df['ema20'].iloc[-1] > df['ema50'].iloc[-1] else 'BAIXA'
+    print(f"📈 Tendência detectada: {tendencia}")
+
+    # 📉 Linhas de tendência com últimos topos e fundos
+    ultimos_fundos = sorted(fundos, key=lambda x: x[0])[-2:]
+    ultimos_topos = sorted(topos, key=lambda x: x[0])[-2:]
+
+    lta_valida = len(ultimos_fundos) == 2
+    ltb_valida = len(ultimos_topos) == 2
+
     stop_percent = (volatilidade * 2) / 100
     take_percent = (volatilidade * 3) / 100
 
     stop_loss = round(preco_atual * (1 - stop_percent), 2)
     take_profit = round(preco_atual * (1 + take_percent), 2)
 
-    if rsi_atual < 25 and preco_atual <= fib["0.618"]:
+    # Verifica se existe uma ordem aberta no Mercado Futuro antes de enviar alerta
+    if existe_ordem_aberta(simbolo):
+        print("🚫 Já existe Posição aberta no Mercado Futuro.")
+        return []
+
+    if rsi_atual < 28 and preco_atual <= fib["0.618"] and tendencia == 'ALTA' and lta_valida:
         print(f"📈 Sinal de COMPRA detectado: preço={preco_atual}, RSI={rsi_atual:.2f}, Fib=0.618")
         sinais.append({
             'tipo': 'COMPRA',
@@ -91,16 +144,14 @@ def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='5m', limite=100):
             'take_profit': take_profit,
             'rsi': round(rsi_atual, 2),
             'nivel_fibonacci': '0.618',
-            'data': datetime.now().strftime('%d/%m/%Y %H:%M')
+            'data': datetime.now().strftime('%d/%m/%Y %H:%M'),
+            'tendencia': tendencia
         })
-        mensagem = f"🚀 **Sinal de COMPRA**\n\nEntrada: ${preco_atual}\nStop Loss: ${stop_loss}\nTake Profit: ${take_profit}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.618"
+        mensagem = f"🚀 **Sinal de COMPRA**\n\nEntrada: ${preco_atual}\nStop Loss: ${stop_loss}\nTake Profit: ${take_profit}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.618\nTendência: {tendencia}"
         enviar_alerta_telegram(token, chat_id, mensagem)
-
-        # Enviar ordem para Binance
         enviar_ordem_binance(simbolo, 'COMPRA', preco_atual, stop_loss, take_profit)
 
-
-    elif rsi_atual > 75 and preco_atual >= fib["0.382"]:
+    elif rsi_atual > 72 and preco_atual >= fib["0.382"] and tendencia == 'BAIXA' and ltb_valida:
         stop_loss_venda = round(preco_atual * (1 + stop_percent), 2)
         take_profit_venda = round(preco_atual * (1 - take_percent), 2)
 
@@ -112,14 +163,12 @@ def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='5m', limite=100):
             'take_profit': take_profit_venda,
             'rsi': round(rsi_atual, 2),
             'nivel_fibonacci': '0.382',
-            'data': datetime.now().strftime('%d/%m/%Y %H:%M')
+            'data': datetime.now().strftime('%d/%m/%Y %H:%M'),
+            'tendencia': tendencia
         })
-        mensagem = f"⚠️ **Sinal de VENDA**\n\nEntrada: ${preco_atual}\nStop Loss: ${stop_loss_venda}\nTake Profit: ${take_profit_venda}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.382"
+        mensagem = f"⚠️ **Sinal de VENDA**\n\nEntrada: ${preco_atual}\nStop Loss: ${stop_loss_venda}\nTake Profit: ${take_profit_venda}\nRSI: {round(rsi_atual, 2)}\nFibonacci: 0.382\nTendência: {tendencia}"
         enviar_alerta_telegram(token, chat_id, mensagem)
-
-        # Enviar ordem para Binance
         enviar_ordem_binance(simbolo, 'VENDA', preco_atual, stop_loss_venda, take_profit_venda)
-
 
     return sinais
 
