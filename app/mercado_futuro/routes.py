@@ -34,12 +34,7 @@ def mercado_futuro():
         vendas=vendas
     )
 
-@mercado_futuro_bp.route("/mercado-futuro/grafico")
-def grafico_analise_tecnica():
-    sucesso = plot_analise_tecnica()  # Gera e salva o gráfico como PNG
-    if not sucesso:
-        return "Não foi possível gerar o gráfico (sem dados suficientes)."
-    return render_template("grafico_analise.html")
+
 
 
 

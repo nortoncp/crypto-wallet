@@ -26,6 +26,7 @@ def create_app():
     from app.mercado_futuro.routes import mercado_futuro_bp
     from app.mercado_spot.routes import mercado_spot_bp
     from app.calendario_economico.routes import calendario_economico_bp
+    from app.grafico.routes import grafico_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(portfolio_bp, url_prefix='/portfolio')
@@ -34,6 +35,7 @@ def create_app():
     app.register_blueprint(mercado_futuro_bp)
     app.register_blueprint(mercado_spot_bp)
     app.register_blueprint(calendario_economico_bp)
+    app.register_blueprint(grafico_bp)
 
     def timestamp_to_date(value):
         return datetime.fromtimestamp(value / 1000).strftime('%d/%m/%Y %H:%M')

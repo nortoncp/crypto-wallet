@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gráfico BTCUSDT</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+</head>
+<body>
+    <h2>Gráfico Análise Técnica BTCUSDT</h2>
+    <canvas id="chartPreco" height="100"></canvas>
+    <canvas id="chartRSI" height="100"></canvas>
+
+    <script>
+        const data = {{ data|tojson }};
+
+        const labels = data.time;
+        const close = data.close;
+        const rsi = data.rsi;
+        const fib = data.fib;
+
+        // Gráfico de Preço + Fibonacci
+        const ctx1 = document.getElementById('chartPreco').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Preço',
+                        data: close,
+                        borderColor: 'blue',
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    ...Object.entries(fib).map(([nivel, valor]) => {
+                        if (['0.0', '0.382', '0.618', '1.0'].includes(nivel)) {
+                            return {
+                                label: `Fibo ${nivel}`,
+                                data: Array(labels.length).fill(valor),
+                                borderColor: (nivel === '0.618' || nivel === '0.382') ? 'orange' : 'gray',
+                                borderDash: (nivel === '0.618' || nivel === '0.382') ? [] : [5, 5],
+                                borderWidth: 1,
+                                fill: false
+                            };
+                        }
+                    }).filter(Boolean)
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Preço + Fibonacci' },
+                    zoom: {
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'x'
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            modifierKey: 'ctrl'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de RSI
+        const ctx2 = document.getElementById('chartRSI').getContext('2d');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'RSI',
+                        data: rsi,
+                        borderColor: 'purple',
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: 'RSI 70',
+                        data: Array(labels.length).fill(70),
+                        borderColor: 'red',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        fill: false
+                    },
+                    {
+                        label: 'RSI 30',
+                        data: Array(labels.length).fill(30),
+                        borderColor: 'green',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Índice de Força Relativa (RSI)' },
+                    zoom: {
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'x'
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            modifierKey: 'ctrl'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+{% endblock %}

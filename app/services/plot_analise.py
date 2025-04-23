@@ -3,7 +3,6 @@ import pandas as pd
 from ta.momentum import RSIIndicator
 from app.services.binance_api import get_klines
 from app.services.analise_tecnica import identificar_topos_fundos, calcular_fibonacci
-import os
 
 
 def plot_analise_tecnica(symbol='BTCUSDT', interval='1h', limit=100):
@@ -39,11 +38,16 @@ def plot_analise_tecnica(symbol='BTCUSDT', interval='1h', limit=100):
     # --- PLOT ---
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
 
-    # Preço + Fibonacci + Sinais
+    # Preço
     ax1.plot(df["time"], df["close"], label="Preço", color="black")
 
+    # Exibir apenas os níveis desejados de Fibonacci
+    niveis_desejados = ['0.0', '0.382', '0.618', '1.0']
     for nivel, valor in fib.items():
-        ax1.axhline(y=valor, linestyle='--', label=f"Fib {nivel}", alpha=0.4)
+        if nivel in niveis_desejados:
+            estilo = '-' if nivel in ['0.382', '0.618'] else '--'
+            cor = 'orange' if nivel in ['0.382', '0.618'] else 'blue'
+            ax1.axhline(y=valor, linestyle=estilo, linewidth=1.5, color=cor, label=f"Fib {nivel}")
 
     # Topos e Fundos
     for i, valor in topos:
@@ -55,15 +59,16 @@ def plot_analise_tecnica(symbol='BTCUSDT', interval='1h', limit=100):
     ax1.legend()
     ax1.grid(True)
 
-    # RSI
+    # RSI com destaque nas zonas de sobrecompra/sobrevenda
     ax2.plot(df["time"], df["rsi"], label="RSI", color="purple")
-    ax2.axhline(30, linestyle='--', color='green', alpha=0.3)
-    ax2.axhline(70, linestyle='--', color='red', alpha=0.3)
+    ax2.axhline(30, linestyle='--', color='green', linewidth=1.5, label='Suporte RSI 30')
+    ax2.axhline(70, linestyle='--', color='red', linewidth=1.5, label='Resistência RSI 70')
     ax2.set_title("Índice de Força Relativa (RSI)")
+    ax2.legend()
     ax2.grid(True)
 
     plt.tight_layout()
     plt.show()
 
-#Para testar o Plot do Grafico
-#print(plot_analise_tecnica())
+#Para testar o gráfico
+#plot_analise_tecnica()
