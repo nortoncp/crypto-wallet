@@ -140,15 +140,17 @@
                     title: { display: true, text: 'Preço + Fibonacci + Topos/Fundos + LTA/LTB' },
                     zoom: {
                         zoom: {
-                            wheel: { enabled: true },
-                            pinch: { enabled: true },
-                            mode: 'x'
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        drag: { enabled: true }, // <- Esta linha faz funcionar o "arrastar para zoom"
+                        mode: 'x'
                         },
                         pan: {
                             enabled: true,
                             mode: 'x',
                             modifierKey: 'ctrl'
                         }
+
                     }
                 }
             }
@@ -193,14 +195,17 @@
                     title: { display: true, text: 'Índice de Força Relativa (RSI)' },
                     zoom: {
                         zoom: {
-                            wheel: { enabled: true },
-                            pinch: { enabled: true },
-                            mode: 'x'
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        drag: { enabled: true }, // <- Esta linha faz funcionar o "arrastar para zoom"
+                        mode: 'x'
                         },
                         pan: {
                             enabled: true,
-                            mode: 'x'
+                            mode: 'x',
+                            modifierKey: 'ctrl'
                         }
+
                     }
                 }
             }
