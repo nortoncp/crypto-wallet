@@ -322,3 +322,30 @@ body.dark-mode .kpi-value {
   color: #f8fafc;
   line-height: 1.2;
 }
+
+input[type="text"], select {
+        background-color: #1f2a36;
+        border: 1px solid #2c3e50;
+        border-radius: 5px;
+        padding: 8px;
+        color: #fff;
+    }
+
+    button {
+        background-color: #f0b90b;
+        color: #0b0e11;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #d8a308;
+    }
+
+    h2 {
+        margin-bottom: 20px;
+    }

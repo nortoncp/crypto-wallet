@@ -5,12 +5,32 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Gráfico BTCUSDT</title>
+    <title>Gráfico Análise Técnica</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 </head>
 <body>
-    <h2>Gráfico Análise Técnica BTCUSDT</h2>
+    <h2>Gráfico Análise Técnica {{ selected_symbol }}</h2>
+
+    <form method="get" action="{{ url_for('grafico.grafico') }}">
+        <label for="symbol">Escolha a Crypto (ex: BTCUSDT):</label>
+        <input type="text" id="symbol" name="symbol" value="{{ symbol or 'BTCUSDT' }}">
+
+        <label for="interval">Escolha o Tempo Gráfico:</label>
+        <select id="interval" name="interval">
+            <option value="1m" {% if interval == '1m' %}selected{% endif %}>1 Minuto</option>
+            <option value="5m" {% if interval == '5m' %}selected{% endif %}>5 Minutos</option>
+            <option value="15m" {% if interval == '15m' %}selected{% endif %}>15 Minutos</option>
+            <option value="30m" {% if interval == '30m' %}selected{% endif %}>30 Minutos</option>
+            <option value="1h" {% if interval == '1h' %}selected{% endif %}>1 Hora</option>
+            <option value="4h" {% if interval == '4h' %}selected{% endif %}>4 Horas</option>
+            <option value="1d" {% if interval == '1d' %}selected{% endif %}>1 Dia</option>
+            <option value="1w" {% if interval == '1w' %}selected{% endif %}>1 Semana</option>
+        </select>
+
+        <button type="submit">Atualizar</button>
+    </form>
+
     <canvas id="chartPreco" height="100"></canvas>
     <canvas id="chartRSI" height="100"></canvas>
 
@@ -21,8 +41,32 @@
         const close = data.close;
         const rsi = data.rsi;
         const fib = data.fib;
+        const topos = data.topos;
+        const fundos = data.fundos;
+        const lta = data.lta;
+        const ltb = data.ltb;
 
-        // Gráfico de Preço + Fibonacci
+        // Função para gerar Fibonacci apenas entre inicio e fim
+        function generateFiboLine(valor, inicio, fim, cor, tracejado, label) {
+            const line = Array(labels.length).fill(null);
+            for (let i = inicio; i <= fim; i++) {
+                if (i >= 0 && i < labels.length) {
+                    line[i] = valor;
+                }
+            }
+            return {
+                label: label,
+                data: line,
+                borderColor: cor,
+                borderDash: tracejado,
+                borderWidth: 0.5,
+                fill: false,
+                pointRadius: 0,
+                tension: 0
+            };
+        }
+
+        // Gráfico de Preço + Fibonacci + Topos/Fundos + LTA/LTB
         const ctx1 = document.getElementById('chartPreco').getContext('2d');
         new Chart(ctx1, {
             type: 'line',
@@ -36,25 +80,64 @@
                         borderWidth: 2,
                         fill: false
                     },
-                    ...Object.entries(fib).map(([nivel, valor]) => {
+                    // Adiciona Fibonacci apenas nos trechos de início a fim
+                    ...Object.entries(fib).map(([nivel, info]) => {
                         if (['0.0', '0.382', '0.618', '1.0'].includes(nivel)) {
-                            return {
-                                label: `Fibo ${nivel}`,
-                                data: Array(labels.length).fill(valor),
-                                borderColor: (nivel === '0.618' || nivel === '0.382') ? 'orange' : 'gray',
-                                borderDash: (nivel === '0.618' || nivel === '0.382') ? [] : [5, 5],
-                                borderWidth: 1,
-                                fill: false
-                            };
+                            let color, dash;
+                            if (nivel === '0.618') {
+                                color = 'orange';
+                                dash = [];
+                            } else if (nivel === '0.382') {
+                                color = 'pink';
+                                dash = [];
+                            } else {
+                                color = 'gray';  // 0.0 e 1.0 cinza
+                                dash = [5, 5];
+                            }
+                            return generateFiboLine(info.valor, info.inicio, info.fim, color, dash, `Fibo ${nivel}`);
                         }
-                    }).filter(Boolean)
+                    }).filter(Boolean),
+                    {
+                        label: 'Topos',
+                        data: topos,
+                        borderColor: 'red',
+                        backgroundColor: 'red',
+                        showLine: false,
+                        pointRadius: 7,
+                        pointHoverRadius: 10
+                    },
+                    {
+                        label: 'Fundos',
+                        data: fundos,
+                        borderColor: 'green',
+                        backgroundColor: 'green',
+                        showLine: false,
+                        pointRadius: 7,
+                        pointHoverRadius: 10
+                    },
+                    {
+                        label: 'LTA',
+                        data: lta,
+                        borderColor: 'limegreen',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        fill: false
+                    },
+                    {
+                        label: 'LTB',
+                        data: ltb,
+                        borderColor: 'crimson',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        fill: false
+                    }
                 ]
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: { position: 'top' },
-                    title: { display: true, text: 'Preço + Fibonacci' },
+                    title: { display: true, text: 'Preço + Fibonacci + Topos/Fundos + LTA/LTB' },
                     zoom: {
                         zoom: {
                             wheel: { enabled: true },
@@ -116,8 +199,7 @@
                         },
                         pan: {
                             enabled: true,
-                            mode: 'x',
-                            modifierKey: 'ctrl'
+                            mode: 'x'
                         }
                     }
                 }

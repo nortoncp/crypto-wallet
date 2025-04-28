@@ -135,7 +135,7 @@ def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='1h', limite=100):
         print("🚫 Já existe Posição aberta no Mercado Futuro.")
         return []
 
-    if rsi_atual < 28 and preco_atual <= fib["0.618"] and tendencia == 'ALTA' and lta_valida:
+    if rsi_atual < 30 and preco_atual <= fib["0.618"] and tendencia == 'ALTA' and lta_valida:
         print(f"📈 Sinal de COMPRA detectado: preço={preco_atual}, RSI={rsi_atual:.2f}, Fib=0.618")
         sinais.append({
             'tipo': 'COMPRA',
@@ -151,7 +151,7 @@ def gerar_sinais_entrada(simbolo='BTCUSDT', intervalo='1h', limite=100):
         enviar_alerta_telegram(token, chat_id, mensagem)
         enviar_ordem_binance(simbolo, 'COMPRA', preco_atual, stop_loss, take_profit)
 
-    elif rsi_atual > 72 and preco_atual >= fib["0.382"] and tendencia == 'BAIXA' and ltb_valida:
+    elif rsi_atual > 70 and preco_atual >= fib["0.382"] and tendencia == 'BAIXA' and ltb_valida:
         stop_loss_venda = round(preco_atual * (1 + stop_percent), 2)
         take_profit_venda = round(preco_atual * (1 - take_percent), 2)
 
