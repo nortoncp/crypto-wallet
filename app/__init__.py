@@ -49,6 +49,6 @@ def create_app():
         except:
             return value
 
-    iniciar_agendador()
+    #iniciar_agendador()
 
     return app

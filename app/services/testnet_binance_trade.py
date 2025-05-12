@@ -5,11 +5,10 @@ from dotenv import load_dotenv
 from app.services import *
 
 load_dotenv()
-API_KEY = os.getenv("BINANCE_API_KEY")
-API_SECRET = os.getenv("BINANCE_API_SECRET")
+API_KEY = os.getenv("TESTNET_BINANCE_API_KEY")
+API_SECRET = os.getenv("TESTNET_BINANCE_API_SECRET")
 
-client = Client(API_KEY, API_SECRET)
-
+client = Client(API_KEY, API_SECRET, testnet=True)
 
 ### Configura o Mercado Futuro com 2x de Alavancagem e Margem Isolada
 def configurar_mercado_futuro(symbol):
@@ -50,7 +49,6 @@ def existe_ordem_aberta(symbol):
 
 ### Envia ordem para a Binance
 def enviar_ordem_binance(symbol, tipo_ordem, preco_entrada, stop_loss, take_profit):
-    configurar_mercado_futuro(symbol)
 
     preco_atual = float(client.futures_mark_price(symbol=symbol)['markPrice'])
     quantidade = round(1000 / preco_atual, 3)  # Até $1000
@@ -70,7 +68,7 @@ def enviar_ordem_binance(symbol, tipo_ordem, preco_entrada, stop_loss, take_prof
                 symbol=symbol,
                 side=SIDE_SELL,
                 type=ORDER_TYPE_TAKE_PROFIT,
-                price=round(take_profit, 2),
+                stopPrice=round(take_profit, 2),
                 timeInForce=TIME_IN_FORCE_GTC,
                 priceProtect=False,
                 quantity=quantidade
@@ -113,7 +111,7 @@ def enviar_ordem_binance(symbol, tipo_ordem, preco_entrada, stop_loss, take_prof
             client.futures_create_order(
                 symbol=symbol,
                 side=SIDE_BUY,
-                type=ORDER_TYPE_STOP_MARKET,
+                type=ORDER_TYPE_STOP_LOSS,
                 stopPrice=round(stop_loss, 2),
                 timeInForce=TIME_IN_FORCE_GTC,
                 priceProtect=True,

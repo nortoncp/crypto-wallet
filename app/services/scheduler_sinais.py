@@ -1,6 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.services.analise_tecnica import gerar_sinais_entrada
 
+
 def iniciar_agendador():
     scheduler = BackgroundScheduler()
     scheduler.add_job(gerar_sinais_entrada, 'interval', seconds=30)
